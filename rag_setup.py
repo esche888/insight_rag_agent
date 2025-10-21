@@ -49,6 +49,8 @@ MODEL_TEMPERATURE = float(os.getenv("MODEL_TEMPERATURE", 0))
 EVAL_TEST_DATA_FILE_PATH = os.getenv("EVAL_TEST_DATA_FILE_PATH", "UNDEFINED!!")
 RAG_CHAIN_TYPE = os.getenv("RAG_CHAIN_TYPE", "stuff")
 
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
 # Document types
 DOC_TYPE_PDF="pdf"
 DOC_TYPE_SALES_SUMMARY="sales_summary"

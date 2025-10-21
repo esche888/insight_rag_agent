@@ -32,6 +32,8 @@ load_dotenv(verbose=True)
 EVAL_LLM_TEMPERATURE = float(os.getenv("EVAL_LLM_TEMPERATURE", 0.2))
 EVAL_MODEL = os.getenv("EVAL_MODEL", MODEL_GPT35)
 
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
 
 def load_test_dataset(eval_test_file) -> List[Dict]:
     """ Load test questions with expected answers """
@@ -63,6 +65,7 @@ def make_predictions(agent, test_cases: List[Dict], model: str, temperature: flo
     predictions = []
     for i, test in enumerate(test_cases, 1):
         # Use test case data to run test
+        logger.info("")
         logger.info("")
         logger.info(f"[Test {i}/{len(test_cases)}] {test['query']}")
         try:

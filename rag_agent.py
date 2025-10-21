@@ -17,7 +17,7 @@ from langgraph.graph import StateGraph, START, END
 from langchain.prompts import PromptTemplate
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
-from langgraph.checkpoint.sqlite import SqliteSaver
+# from langgraph.checkpoint.sqlite import SqliteSaver
 from langchain.prompts import PromptTemplate
 
 from utils.prompt_loader import load_prompt
@@ -33,6 +33,9 @@ QUESTION_TYPE_SALES_SUM = "Sales Summary Type Question"
 RESPONSE_CUT_OFF = 200
 CONVERSATIONS_DIR_PATH="conversations"
 CONVERSATION_FILENAME="conversation.txt"
+
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
 
 # Set up logging for this module
 logger = logging.getLogger(__name__)
@@ -81,7 +84,7 @@ class InsightAgent:
     def run_insight_chain(self, model: str, temperature: float, rag_chain, question: str) -> dict:
         """ Execute a query through the insight agent by initiating LG chain """
 
-        logger.info("=" * 80)
+        logger.info("_" * 80)
         logger.info(f"Run Insight chain using [{model}] - \"{question}\"")
         try:
             # Prepare input for LG chain with HumanMessage
@@ -442,19 +445,9 @@ class InsightAgent:
         workflow.add_edge(PDF_TYPE_NODE, END)
 
         # Compile the workflow with memory
-        persistance_msg_part = ""
-        if not USE_CHAT_PERSISTANCE:
-            memory = MemorySaver()
-            self.lg_chain = workflow.compile(checkpointer=memory)
-            persistance_msg_part = "NON-PERSISTANT"
-        else:
-            # SQLite memory (persists across restarts)
-            db_path = "checkpoints.db"
-            with SqliteSaver.from_conn_string(db_path) as memory:
-                self.lg_chain = workflow.compile(checkpointer=memory)
-            persistance_msg_part = "PERSISTANT"
-           
-        logger.info(f"LangGraph workflow with {persistance_msg_part} memory compiled successfully")
+        memory = MemorySaver()
+        self.lg_chain = workflow.compile(checkpointer=memory)         
+        logger.info(f"LangGraph workflow with memory compiled successfully")
         return self.lg_chain
 
 

@@ -23,6 +23,7 @@ from rag_setup import MODEL_GEMMA, MODEL_GEMINI, MODEL_GPT35
 from rag_agent import create_insight_agent
 from rag_eval import load_test_dataset, EVAL_TEST_DATA_FILE_PATH, eval_single_test, load_eval_prompt
 
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 # Logging setup. For now without writing log messages to log file
 configure_logging(level=logging.WARNING)

@@ -20,9 +20,28 @@ In the side pannel there is also a dropdown for precanned questions.
 
 ## Setup instructions
 1. Clone repository
-2. Set up ven environment:  # python -m venv venv
+2. Set up ven environment:  
+    > python -m venv venv
+    > . venv/bin/activate
 3. Ensure that API Keys are defined in environment (OPENAI_API_KEY, GOOGLE_API_KEY)
-4. Define default LLM to be used for RAG loading and inference: Set MODEL_DEFAULT in .env
-5. Load RAG layer: Run rag_setup.py
-6. Test agent: Run rag_eval.py
-7. Run agent: Run rag_app.py as a streamlit application (# streamlit run rag_app.py)
+    > echo $GOOGLE_API_KEY    
+    > echo $OPENAI_API_KEY 
+4. Define default model to be used for RAG loading and inference: 
+    - Set MODEL_DEFAULT in .env to the corresponding model
+    - Like MODEL_DEFAULT="gpt-3.5-turbo"
+5. Ensure you have the latest version of pip installed
+    > python -m pip install --upgrade pip
+5. Install python packages in virtual environment
+    > pip install -r requirements.txt   # This can take a while
+6. Load RAG layer: 
+    > python rag_setup.py 
+7. Test agent: 
+    > python rag_eval.py
+8. Run agent as a streamlit application 
+    > streamlit run rag_app.py 
+
+
+Still TBD:
+* Make chats persistent
+* Some issues installing all packages in requirements.txt in one go
+* Some testcases still fail
