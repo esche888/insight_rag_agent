@@ -1,0 +1,177 @@
+[
+    {
+        "query": "Which air quality parameters were monitored according to the Time Series Data Prediction paper?",
+        "answer": "Carbon monoxide (CO), carbon dioxide (CO₂), ammonia (NH₃), and acetone ((CH₃)₂CO).",
+        "category": "Data Prediction PDF"
+    },
+    {
+        "query": "What is the role of IoT in the research described in the Time Series Data Prediction paper?",
+        "answer": "IoT was used to collect air quality data automatically using MQ-135 gas sensors, DHT-22 temperature/humidity sensors, and Arduino-Uno microcontrollers without human intervention.",
+        "category": "Data Prediction PDF"
+    },
+    {
+        "query": "Which algorithm was used for prediction as described in the Time Series Data Prediction paper?",
+        "answer": "A simple linear regression model was used to predict next-day AQI based on the previous day’s data.",
+        "category": "Data Prediction PDF"
+    },
+    {
+        "query": "What were the four performance metrics used for model evaluation as described in the Time Series Data Prediction paper?",
+        "answer": "Mean Absolute Error (MAE), Mean Squared Error (MSE), Root Mean Squared Error (RMSE), and Mean Absolute Percentage Error (MAPE).",
+        "category": "Data Prediction PDF"
+    },
+    {
+        "query": "What was the average performance of the proposed model as described in the Time Series Data Prediction paper?",
+        "answer": "MAE ≈ 7.57, MSE ≈ 107.95, RMSE ≈ 10.30, and MAPE ≈ 0.0769.",
+        "category": "Data Prediction PDF"
+    },
+
+    {
+        "query": "According to the document, what is the umbrella concept for tools and techniques that help managers understand the business situation?",
+        "answer": "Business Intelligence (BI) is the umbrella concept for tools, techniques, and solutions that helps managers to understand the business situation.",
+        "category": "BI Approaches PDF"
+    },
+    {
+        "query": "What are the three approaches used in Business Intelligence (BI) according to the review study?",
+        "answer": "The three approaches are the Managerial approach, the Technical approach, and the Enabling approach (or Enabler approach).",
+        "category": "BI Approaches PDF"
+    },
+    {
+        "query": "What is the primary focus of the Managerial approach to Business Intelligence?",
+        "answer": "The Managerial approach focuses on improving management decision making.",
+        "category": "BI Approaches PDF"
+    },
+    {
+        "query": "What is the primary focus of the Technical approach to Business Intelligence?",
+        "answer": "The Technical approach focuses on tools supporting the processes associated with intelligence in the management approach.",
+        "category": "BI Approaches PDF"
+    },
+    {
+        "query": "What is the primary focus of the Enabler approach to Business Intelligence?",
+        "answer": "The Enabling approach focuses on value-added capabilities in support of shared information (or information).",
+        "category": "BI Approaches PDF"
+    },
+    {
+        "query": "Based on the pie chart data, what percentage of the definitions studied focused on the managerial approach?",
+        "answer": "50% of the definitions focused on the managerial approach.",
+        "category": "BI Approaches PDF"
+    },
+    {
+        "query": "How are Management Dashboards described as a valuable tool?",
+        "answer": "Management Dashboards are described as a valuable tool because they bring all data together on one page and allow for easy interpretation using charts and forms for managers and employees.",
+        "category": "BI Approaches PDF"
+    },
+
+    {
+        "query": "What is the widely accepted definition of Artificial Intelligence (AI) that the researchers base their study on?",
+        "answer": "AI is defined as 'a system's ability to correctly interpret external data, to learn from such data, and to use those learnings to achieve specific goals and tasks through flexible adaptation'[cite: 84].",
+        "category": "AI-Driven BMI PDF"
+    },
+    {
+        "query": "According to the review, what are the three types of learning included in Machine Learning (ML)?",
+        "answer": "Machine Learning (ML) includes three types of learning: supervised, unsupervised, and reinforcement learning[cite: 89].",
+        "category": "AI-Driven BMI PDF"
+    },
+    {
+        "query": "Which study design was the most common in AI-driven BMI research, and what was the second most prominent design?",
+        "answer": "Case studies (including single-case and multiple-case studies) were the most common study design applied in AI-driven BMI research, followed by statistical analysis[cite: 171, 172].",
+        "category": "AI-Driven BMI PDF"
+    },
+    {
+        "query": "What are the six overarching dimensions identified that map the content of the AI-driven BMI research landscape?",
+       "answer": "The six dimensions are: (1) triggers, (2) restraints, (3) resources and capabilities, (4) application of AI, (5) implications, and (6) management and organizational issues[cite: 198].",
+        "category": "AI-Driven BMI PDF"
+    },
+    {
+        "query": "From the perspective of 'BMI Implications,' what is AI's role as a disrupter, and what is an example provided?",
+        "answer": "AI as a disrupter involves AI-driven BMs that challenge and redefine industry standards and practices[cite: 599]. [cite_start]An example is the implementation of autonomous vehicles, which contests traditional conceptions of transportation and logistics[cite: 600].",
+        "category": "AI-Driven BMI PDF"
+    },
+    {
+        "query": "Name two types of learning techniques that fall under supervised learning.",
+        "answer": "Two types of supervised learning techniques are classification (decision-tree) and regression problems[cite: 92].",
+        "category": "AI-Driven BMI PDF"
+    },
+    {
+        "query": "What two thematic dimensions were used to organize the four types of AI-driven BMI research?",
+        "answer": "The four types of AI-driven BMI are organized around two thematic dimensions: the **emergence of BMI** (evolutionary change vs. active change) and the **centrality of AI for value creation** (peripheral vs. core)[cite: 628, 688, 663, 664].",
+        "category": "AI-Driven BMI PDF"
+    },
+
+        
+    {
+        "query": "What are two key business drivers that the paper analyzed in Walmart's sales data?",
+        "answer": "The two key business drivers analyzed were factors affecting sales such as **temperature, fuel price, and holidays**, and their impact on sales at stores of different locations.",
+        "category": "Walmart's Sales Data Analysis PDF"
+    },
+    {
+        "query": "Which two programming environments and which Big Data framework were primarily used for the analysis in this paper?",
+        "answer": "The analysis primarily made use of **Scala and Python API of the Spark framework**.",
+        "category": "Walmart's Sales Data Analysis PDF"
+    },
+    {
+        "query": "What is the general sales pattern observed in the first and final quarters of the year across all stores?",
+        "answer": "The **first quarter (January-March) has low (decreasing) sales** for the entire Walmart stores. The **final quarter (October-December) shows a spike in sales** across all 45 stores as the end of the year approaches.",
+        "category": "Walmart's Sales Data Analysis PDF"
+    },
+    {
+        "query": "According to the analysis, what is the reasonable range for fuel price and temperature that leads to higher total sales?",
+        "answer": "More sales occur when **fuel price is at a reasonable range of $2.90 to $3.80 per liter** [cite: 1840][cite_start], and when **temperature is at a reasonable range of $\\approx 21^{0}$ to $\\approx 60^{0}$ in the Fahrenheit scale** (which is neither too cold nor too hot)[cite: 1842].",
+        "category": "Walmart's Sales Data Analysis PDF"
+    },
+    {
+        "query": "What is the main advantage of using Apache Spark over Hadoop MapReduce for this type of analysis?",
+        "answer": "Apache **Spark is 100 times faster** than Hadoop MapReduce [cite: 1750][cite_start], primarily because Spark does **in-memory computing** (memory caching), avoiding latency caused by reading intermediate data from the disk[cite: 1833].",
+        "category": "Walmart's Sales Data Analysis PDF"
+    },
+    {
+        "query": "What is the problem the study addresses regarding traditional retailers?",
+        "answer": "Retailers often find it hard to comprehend the market condition since their retail stores are at various geographical locations, and without a 360-degree view of their consumers, they risk losing a competitive edge[cite: 1647, 1645].",
+        "category": "Walmart's Sales Data Analysis PDF"
+    },
+    {
+        "query": "In the technology implementation section, how was the key-value pair for the MapReduce process formatted?",
+        "answer": "The key was a concatenated value in the format **STORE DATE**, and the values were the sales, temperature, fuel price, holiday, and unemployment rate[cite: 1753].",
+        "category": "Walmart's Sales Data Analysis PDF"
+    },
+
+    {
+        "query": "Which product had the highest total sales in May 2023, and what was that amount?",
+        "answer": "Widget A had the highest total sales in May 2023, totaling $5185.00.",
+        "category": "Business Sales Data"
+    },
+    {
+        "query": "In which month did Widget C achieve its highest recorded sales amount?",
+        "answer": "Widget C achieved its highest recorded sales amount of $7889.00 in April 2026.",
+        "category": "Business Sales Data"
+    },
+    {
+        "query": "Find the month where Widget B had its lowest average customer satisfaction score.",
+        "answer": "Widget B had its lowest average customer satisfaction score of 1.9 in May 2026.",
+        "category": "Business Sales Data"
+    },
+    {
+        "query": "Identify the region with the highest total sales in March 2028, and state the sales figure.",
+        "answer": "The West region had the highest total sales in March 2028, totaling $6230.00.",
+        "category": "Business Sales Data"
+    },
+    {
+        "query": "Which region had the largest difference between its highest and lowest average customer satisfaction score across the provided months?",
+        "answer": "The North region had the largest difference. Its highest satisfaction was 4.4 (March 2027) and its lowest was 2.2 (January 2027), resulting in a difference of 2.2.",
+        "category": "Business Sales Data"
+    },
+    {
+        "query": "Compare the average sales for customers of gender 'Female' and 'Male'.",
+        "answer": "The average sales for female customers were $558.96, while the average sales for male customers were $547.56.",
+        "category": "Business Sales Data"
+    },
+    {
+        "query": "In the fourth quarter of 2027 (Oct-Dec), which product had the lowest total sales?",
+        "answer": "Widget B had the lowest total sales in the fourth quarter of 2027, with $2124.00 (October 2027).",
+        "category": "Business Sales Data"
+    },
+    {
+        "query": "Which two regions showed an average customer satisfaction score of 3.6 in April 2026?",
+        "answer": "The North region (3.6) and the West region (3.6) both showed an average customer satisfaction score of 3.6 in April 2026.",
+        "category": "Business Sales Data"
+    }
+]

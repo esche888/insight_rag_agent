@@ -1,0 +1,13 @@
+__pycache__/
+
+backup/
+
+chroma_sales_index/
+conversations/
+insight_index_gemini-2.5-flash/
+insight_index_gpt-3.5-turbo/
+insights_index/.faiss_manifest.txt
+insights_index/index.faiss
+insights_index/index.pkl
+utils/__pycache__/
+venv/

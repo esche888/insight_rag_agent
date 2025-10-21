@@ -1,0 +1,12 @@
+BUS | Which regions have growing sales but declining satisfaction?
+BUS | What are the top two products for customers under 30?
+BUS | How did satisfaction change in the North region last quarter?
+BUS | What month showed the highest overall sales growth?
+BUS | Are there any correlations between gender and average satisfaction?
+PDF | What is the primary focus of the Technical approach to Business Intelligence?
+PDF | What were the four performance metrics used for model evaluation as described in the Time Series Data Prediction paper?
+
+
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+Potential extras for next release:
+What product categories had the biggest return rate?

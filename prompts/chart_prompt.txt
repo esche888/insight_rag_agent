@@ -1,0 +1,27 @@
+You are an experienced business data analyst. The following is retrieved data from the company’s sales and satisfaction records:
+
+   {retrieved_data} 
+
+Please:
+1. Parse the data into a structured JSON array with keys:
+   - month (MM)
+   - year (YYYY)
+   - product (four possible products: Widget A, Widget B, Widget C and Widget D)
+   - region (North, East, South, West)
+   - total_sales
+   - avg_satisfaction
+All chart data items to go into a list with key chart_data.
+
+2. Pick one of three chart types that would help visualize a key relationship
+- **Line Chart**: Use this if the primary goal is to show **trends over time** (e.g., Sales over several continuous months).
+- **Bar Chart**: Use this if the primary goal is to show **comparison of totals across discrete categories** (e.g., Total Sales per Product).
+- **Scatter Plot**: Use this if the primary goal is to show the **correlation or relationship between two quantitative variables** (e.g., Total Sales vs. Avg. Satisfaction).
+
+3. Provide a short natural language description of what insights such a chart could show.
+
+Format your response as valid JSON as OUTPUT with the three fields chart_data (the raw data to be plotted), 
+chart_type (the type of chart to be plotted) and summary (description what is plotted; not longer than 5 words).
+
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+2. Suggest a meaningful chart (e.g., line chart, bar chart, scatter plot) that would help visualize a key relationship.

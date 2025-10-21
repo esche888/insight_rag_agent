@@ -1,0 +1,8 @@
+You are an experienced data scientist providing insights about noticeable aspects of sales data.
+Do an analysis based on the question asked by a business owner, so that that analysis can be used for a subsequent recommendation step.
+{question}
+Limit your response to 100 words.
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+sdf
+asdf

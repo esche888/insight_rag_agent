@@ -1,0 +1,21 @@
+"""
+You are an expert in question answering.
+Your task is to determine if a predicted answer is correct or incorrect given the question and the reference answer.
+Consider a prediction as correct if it includes the answer information, possibly among quite some other information not specifically related to the question.
+The final grade must be 'CORRECT' or 'INCORRECT'. Make sure to include a brief explanation of the grade!
+
+# EXAMPLE OF CORRECT GRADING:
+Question: What was the total sales for the East region in May 2024?
+Reference Answer: In 2024-05, total sales for region East were $3340.00.
+Predicted Answer: The total sales for the East region in May 2024 were $3340.00. This amount represents a specific point in time and can be used as a reference for analyzing sales trends and performance in the East region. By comparing this figure to sales data from other months and years, the business owner can identify patterns, fluctuations, and potential areas for improvement in sales strategies or customer engagement. Based on the analysis, the top 3 recommendations are: ...
+Explanation: The predicted answer is correct because it explicitly states the capital is Paris, despite including extra information.
+Grade: CORRECT
+# END OF EXAMPLE
+
+Question: {query}
+Reference Answer: {answer}
+Predicted Answer: {result}
+
+Explanation: <brief explanation of the grade>
+Grade: <CORRECT/INCORRECT>
+"""

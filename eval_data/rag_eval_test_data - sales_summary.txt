@@ -1,0 +1,57 @@
+[
+  {
+    "query": "For month 1 of year 2022 what is available sales data for Widget A, Widget B, Widget C and?",
+    "answer": "Widget A: $4232; Widget B: $2287; Widget C: $6073; Widget D: $5878.",
+    "category": "Sales Analysis & Recommendation"
+  },
+  {
+    "query": "What are the sales numbers for Widget A, Widget B, Widget C and Widget D in January 2022?",
+    "answer": "Widget A: $4232; Widget B: $2287; Widget C: $6073; Widget D: $5878.",
+    "category": "Sales Analysis & Recommendation"
+  },
+  {
+    "query": "To address market weaknesses, which region should management investigate for recurring low sales performance as indicated by the lowest single month sales figure across all regions?",
+    "answer": "Management should investigate the West region's operational or marketing strategy, as it recorded the lowest single month of sales at $614.00$ in November 2028, suggesting a significant point of failure or resource misallocation.",
+    "category": "Sales Analysis & Recommendation"
+  },
+  {
+    "query": "Which region demonstrated the largest monthly sales spike in Q4 2023, suggesting the biggest seasonal effect management should leverage?",
+    "answer": "The North region saw the largest sales spike, with total sales jumping from $3928.00$ in September 2023 to $7585.00$ in October 2023, an increase of $3657.00$ that indicates a strong, replicable seasonal effect.",
+    "category": "Sales Analysis & Recommendation"
+  },
+  {
+    "query": "Given the demographic data, how should marketing strategy be adapted considering the difference in average sales between female and male customers?",
+    "answer": "Since both genders share the same average satisfaction score of 3.0, marketing spend should prioritize and investigate the slightly higher average sales potential seen in the female customer segment ($558.96$ versus male customers at $547.56$).",
+    "category": "Sales Analysis & Recommendation"
+  },
+  {
+    "query": "Which product experienced the largest deterioration in average customer satisfaction score between January 2022 and September 2024, signaling the most urgent quality or service review?",
+    "answer": "Widget C experienced the largest deterioration in average satisfaction, falling sharply from $2.9$ in January 2022 to its lowest recorded score of $1.4$ in September 2024.",
+    "category": "Sales Analysis & Recommendation"
+  },
+  {
+    "query": "Which product demonstrated the most effective single-month sales recovery, identifying a successful tactic management might try to replicate across other product lines?",
+    "answer": "Widget A demonstrated the strongest single-month sales recovery in 2022, increasing from a low of $1290.00$ in April to a high of $7746.00$ in May, a drastic increase that points to highly effective short-term tactics.",
+    "category": "Sales Analysis & Recommendation"
+  },
+  {
+    "query": "Identify the region that records the highest single month of total sales, indicating the store configuration or strategy that maximizes revenue.",
+    "answer": "The South region recorded the highest single month of total sales across the dataset, reaching $8862.00$ in May 2024, highlighting this region's peak revenue potential.",
+    "category": "Sales Analysis & Recommendation"
+  },
+  {
+    "query": "Which product achieved the highest recorded customer satisfaction score in any single month, and what month should be studied for best practices?",
+    "answer": "Widget D recorded the highest single month of average customer satisfaction, reaching $4.4$ in May 2028, suggesting that operational practices during that period should be studied and generalized.",
+    "category": "Sales Analysis & Recommendation"
+  },
+  {
+    "query": "Based on the demographic data, what is the approximate average age for both male and female customers, providing context for targeted marketing campaigns?",
+    "answer": "Female customers have an average age of $43.4$ years, and male customers have an average age of $43.3$ years.",
+    "category": "Sales Analysis & Recommendation"
+  },
+  {
+    "query": "What was the total sales for the East region in May 2024?",
+    "answer": "In May 2024, the total sales for the East region were $3340.00.",
+    "category": "Sales Analysis & Recommendation"
+  }
+]

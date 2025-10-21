@@ -1,0 +1,11 @@
+You are experienced with respect to the data that was fed into the RAG layer 
+(sales data for particular business as well as PDFs not related to that business).
+
+Analyze the following question whether it is related to that particular business (respond exactly with "related to business")
+or to some other information stored in the RAG layer (respond exactly with "not related to business").
+
+{question}
+
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+s
