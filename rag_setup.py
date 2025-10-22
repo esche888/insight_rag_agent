@@ -3,8 +3,16 @@ rag_set.py
 Setting up Streamlit UI to access LangGraph chain for querying RAG layer
 """
 
-import os
+from __future__ import absolute_import
+
 import sys
+if __name__ == "__main__":
+    # This prevents issues when Streamlit reloads modules
+    pass
+
+
+import sys
+import os
 import logging 
 import shutil
 
@@ -19,8 +27,8 @@ from langchain_ollama import OllamaEmbeddings, OllamaLLM
 from langchain_community.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI 
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.docstore.document import Document  
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
 
@@ -67,16 +75,6 @@ if len(sys.argv) > 1:
 else:
     model = MODEL_DEFAULT
 logger.debug(f"Model for loading RAG: {model}")
-
-# Check whether API key is valid
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-# if not GEMINI_API_KEY:
-#     sys.exit(
-#         "🛑 FATAL: The GEMINI_API_KEY environment variable is not set. "
-#         "Please define it in your shell environment or a .env file."
-#     )
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-
 
 # Vectorstore
 FAISS_INDEX_PATH = f"{FAISS_INDEX_PATH_BASE}_{model}"
@@ -258,7 +256,7 @@ def remove_directory(path: str):
             logging.error(f"🛑 ERROR: Failed to delete directory '{path}': {e}")
             raise
     else:
-        logging.info(f"Directory {path} doesn't exist and can therefore not be deleted")
+        logging.debug(f"Directory {path} doesn't exist and can therefore not be deleted")
 
 
 def update_vectorstore(model: str, new_data_documents: list[Document]):
@@ -397,12 +395,19 @@ def load_vectorstore(model: str):
     FAISS_INDEX_PATH = f"{FAISS_INDEX_PATH_BASE}_{model}"
     logger.debug(f"Load vectorstore for {model} from directory [{FAISS_INDEX_PATH}]")
     embeddings = create_embeds_genrtr(model)
-    vectorstore = FAISS.load_local(
-        FAISS_INDEX_PATH, 
-        embeddings,
-        allow_dangerous_deserialization=True
-    )
-    return vectorstore
+    try:
+        vectorstore = FAISS.load_local(
+            FAISS_INDEX_PATH, 
+            embeddings,
+            allow_dangerous_deserialization=True
+        )
+        return vectorstore
+    
+    except Exception as e:
+        logger.critical(f"🛑 CRITICAL: Failed to access vectorstore for {model} in directory [{FAISS_INDEX_PATH}]"),
+        logger.critical(f"          Might need to run:  python rag_setup.py")
+        logger.debug(f"Exception: {e}")
+        raise
 
 
 def create_llm(model: str, temperature):
@@ -420,6 +425,9 @@ def create_llm(model: str, temperature):
         raise ValueError(f"Not able to create LLM client for {model}: {e}")
     return llm
 
+# Helper function to format documents
+def format_docs(docs):
+    return "\n\n".join(doc.page_content for doc in docs)
 
 def create_rag_chain(model, temperature):
     """ Create the rag chain for enabling retrieval from vectorstore """
@@ -429,6 +437,7 @@ def create_rag_chain(model, temperature):
     vectorstore = load_vectorstore(model)
     retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": NUM_RETURNED_DOCS})
     llm = create_llm(model, temperature)
+
     rag_chain = RetrievalQA.from_chain_type(
         llm=llm,
         retriever=retriever,
@@ -440,6 +449,21 @@ def create_rag_chain(model, temperature):
 
 # ---------------- MAIN EXECUTION ----------------
 if __name__ == "__main__":
+
+    # Check whether API key is valid
+    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    if not GOOGLE_API_KEY:
+        sys.exit(
+            "🛑 FATAL: The GOOGLE_API_KEY environment variable is not set. "
+            "Please define it in your shell environment or the .env file."
+        )
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    if not OPENAI_API_KEY:
+        sys.exit(
+            "🛑 FATAL: The OPENAI_API_KEY environment variable is not set. "
+            "Please define it in your shell environment or the .env file."
+    )
+        
     # Load and chunk PDFs and data in sales CSV
     logger.info(f"Starting RAG indexing process for [{model}]")
     new_documents = load_chunk_data(PDFS, SALES_CSV_PATH, CHUNK_SIZE, CHUNK_OVERLAP)

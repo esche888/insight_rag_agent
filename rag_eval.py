@@ -11,17 +11,15 @@ import traceback
 from typing import List, Dict, Optional, Any
 from dotenv import load_dotenv
 
-from langchain.evaluation.qa import QAEvalChain
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
-
+from langchain.evaluation import QAEvalChain
 from logging_config import configure_logging
 from utils.prompt_loader import load_prompt
 from rag_setup import create_rag_chain, MODEL_DEFAULT, MODEL_TEMPERATURE, EVAL_TEST_DATA_FILE_PATH
 from rag_setup import MODEL_GEMMA, MODEL_GEMINI, MODEL_GPT35
 from rag_agent import create_insight_agent
-
 
 # Set up logging 
 configure_logging(level=logging.INFO)
@@ -33,6 +31,8 @@ EVAL_LLM_TEMPERATURE = float(os.getenv("EVAL_LLM_TEMPERATURE", 0.2))
 EVAL_MODEL = os.getenv("EVAL_MODEL", MODEL_GPT35)
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
+
 
 
 def load_test_dataset(eval_test_file) -> List[Dict]:
@@ -114,7 +114,7 @@ def evaluate_predictions(test_cases: List[Dict], predictions: List[Dict], eval_m
 
     logger.info("")
     logger.info("=" * 60)
-    logger.info("Evaluating Predictions with QAEvalChain")
+    logger.info(f"Evaluating Predictions with QAEvalChain using [{eval_model}] ")
     logger.info("=" * 60)
     
     # Create evaluation chain with custom prompt to assess predictions (result) against ground truth (answer)
@@ -126,18 +126,24 @@ def evaluate_predictions(test_cases: List[Dict], predictions: List[Dict], eval_m
     if eval_model == MODEL_GPT35:
         eval_llm = ChatOpenAI(temperature=eval_temp, model=eval_model)
     if eval_model == MODEL_GEMINI:
-        eval_llm = ChatGoogleGenerativeAI(temperature=eval_temp, model=eval_temp)
+        eval_llm = ChatGoogleGenerativeAI(temperature=eval_temp, model=eval_model)
+    logger.info(f"Create eval chain using [{eval_model}] to evaluate predictions against ground truths")
     eval_chain = QAEvalChain.from_llm(eval_llm, prompt=eval_template)
     
     # Evaluate predictions (results) against ground truths (answers)
-    graded_outputs = eval_chain.evaluate(
-        test_cases,
-        predictions,
-        question_key="query",
-        answer_key="answer",
-        prediction_key="result"
-    )
-    return graded_outputs
+    try:
+        graded_outputs = eval_chain.evaluate(
+            test_cases,
+            predictions,
+            question_key="query",
+            answer_key="answer",
+            prediction_key="result"
+        )
+        return graded_outputs
+    
+    except Exception as e:
+        logger.critical(f"🛑 CRITICAL: Failed to evaluate predictions using {eval_model}: {e.message}")
+        raise
 
 
 def load_eval_prompt():
@@ -273,8 +279,12 @@ def run_full_eval(
     logger.info(f"Evaluation model: {eval_model}")
     
     # Initialize agent
-    rag_chain = create_rag_chain(MODEL_DEFAULT, MODEL_TEMPERATURE)
-    agent = create_insight_agent(rag_chain)
+    try: 
+        rag_chain = create_rag_chain(MODEL_DEFAULT, MODEL_TEMPERATURE)
+        agent = create_insight_agent(rag_chain)
+    except Exception as e:
+        logger.error(f"🛑 ERROR: Creating rag_chain and agent: {e}")
+        raise
     
     # Run tests
     predictions = make_predictions(agent, test_cases, model, temperature)
@@ -340,9 +350,27 @@ def get_answer_by_query(json_string: str, target_query: str) -> Optional[str]:
 
 
 if __name__ == "__main__":
+
+    # Check whether API key is valid
+    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    if not GOOGLE_API_KEY:
+        sys.exit(
+            "🛑 FATAL: The GOOGLE_API_KEY environment variable is not set. "
+            "Please define it in your shell environment or the .env file."
+        )
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    if not OPENAI_API_KEY:
+        sys.exit(
+            "🛑 FATAL: The OPENAI_API_KEY environment variable is not set. "
+            "Please define it in your shell environment or the .env file."
+        )
+
     # Run full evaluation
-    run_full_eval(
-        model=MODEL_DEFAULT,
-        temperature=MODEL_TEMPERATURE,
-        eval_model=EVAL_MODEL
-    )
+    try:
+        run_full_eval(
+            model=MODEL_DEFAULT,
+            temperature=MODEL_TEMPERATURE,
+            eval_model=EVAL_MODEL
+        )
+    except Exception as e:
+        sys.exit(f"🛑 FATAL: Failed to run evaluation using [{EVAL_MODEL}]. Received exception: {e.message}")

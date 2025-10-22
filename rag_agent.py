@@ -14,11 +14,9 @@ import os
 from pathlib import Path
 
 from langgraph.graph import StateGraph, START, END
-from langchain.prompts import PromptTemplate
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
-# from langgraph.checkpoint.sqlite import SqliteSaver
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 
 from utils.prompt_loader import load_prompt
 from utils.line_loader import load_lines
@@ -116,7 +114,7 @@ class InsightAgent:
                 "model": model,
                 "temperature": temperature
             }
-            logger.debug(f"[run_insight_chain] returnValue: {returnValue}")
+            logger.debug(f"returnValue: {returnValue}")
             return returnValue
         
         except Exception as e:
@@ -131,7 +129,7 @@ class InsightAgent:
                 "model": model,
                 "temperature": temperature
             }
-            logger.debug(f"[run_insight_chain] returnValue: {returnValue}")
+            logger.debug(f"returnValue: {returnValue}")
             return returnValue
 
 
@@ -376,7 +374,7 @@ class InsightAgent:
             logger.debug(f"recommendation_prompt: \n{json.dumps(vars(recommendation_prompt), indent=2, default=str)}\n")
 
             # Invoke the RAG chain
-            logger.info(f"Calling RAG chain to request a RECOMMENDATION using {state['model']} with temperature {state['temperature']}")
+            logger.info(f"Calling RAG chain to request a RECOMMENDATION using [{state['model']}] with temperature {state['temperature']}")
             start_time = time.time()
             result = self.rag_chain.invoke({"query": state["recommendation_prompt"]})
             end_time = time.time()

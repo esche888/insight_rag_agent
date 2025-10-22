@@ -3,15 +3,24 @@ app.py
 Streamlit UI for InsightForge
 """
 
+
+if __name__ == "__main__":
+    # This prevents issues when Streamlit reloads modules
+    pass
+
 import os
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+
+
 import logging
 import json
 from dotenv import load_dotenv
 import streamlit as st
 import altair as alt
 import pandas as pd
-import streamlit as st
 
 from langchain_core.messages import HumanMessage, AIMessage
 
@@ -30,6 +39,21 @@ configure_logging(level=logging.WARNING)
 # configure_logging(level=logging.INFO, logfile="insightforge.log")
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+# Check whether API key is valid
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+if not GOOGLE_API_KEY:
+    error_msg = f"🛑 ERROR: The GOOGLE_API_KEY environment variable is not set. Please define it in your shell environment or the .env file."
+    logger.critical(error_msg)
+    st.write(error_msg)
+    sys.stop()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    error_msg = f"🛑 ERROR: The OPENAI_API_KEY environment variable is not set. Please define it in your shell environment or the .env file."
+    logger.critical(error_msg)
+    st.write(error_msg)
+    st.stop()
+
 
 # Clear prompt cache to pick up any changes in prompt files right away
 load_prompt.cache_clear()
@@ -66,17 +90,17 @@ except json.JSONDecodeError as e:
 
 
 def init_session_state():
-    """ Initialize all session state variables """
+    """ Initialize all session state variables """ 
 
     # Create RAG chain if it doesn't exist yet
     if "rag_chain" not in st.session_state:
         try:
             st.session_state.rag_chain = create_rag_chain(st.session_state.model, st.session_state.temperature)
         except Exception as e:
-            error_msg = f"🛑 ERROR: RAG layer not set up yet for model [{st.session_state.model}]. "
+            error_msg = f"🛑 ERROR: RAG layer not set up yet for model [{st.session_state.model}]. Might need to run:  python rag_setup.py"
             logger.critical(error_msg)
             st.write(error_msg)
-            sys.exit(1)
+            st.stop()
     
     # Create insights agent if it doesn't exist yet
     if "agent" not in st.session_state:
@@ -236,14 +260,14 @@ def render_sidebar():
 
     with st.sidebar:
         # Add inference controlls
-        render_inference_panel()
+        render_infer_panel()
         st.divider()
 
         # Add conversation tools
-        render_conversation_panel()
+        render_convers_panel()
 
         # Add evaluation tools
-        render_evaluation_panel()
+        render_eval_panel()
 
         # Add debug tools
         render_debug_panel()
@@ -252,7 +276,7 @@ def render_sidebar():
         render_rag_panel()
 
 
-def render_inference_panel():
+def render_infer_panel():
     """ Render the Inference panel"""
 
     # Print the header of this panel
@@ -293,12 +317,18 @@ def render_inference_panel():
     
     # Dropdown for models 
     currently_used_model = st.session_state.model
-    def on_select_chosen_model():
+    def on_select_model():
         selected_model = st.session_state.model_selected
         if selected_model != currently_used_model:
             # New model selected; need to also create a new RAG chain for it
             st.session_state.model = selected_model
-            st.session_state.rag_chain = create_rag_chain(st.session_state.model, st.session_state.temperature)
+            try:
+                st.session_state.rag_chain = create_rag_chain(st.session_state.model, st.session_state.temperature)
+            except Exception as e:
+                st.error(f"**CRITICAL ERROR:** Failed to load required vectorstore for **{st.session_state.model}**.")
+                st.warning(f"Please ensure the vector store exists for model {st.session_state.model}.")
+                st.warning(f"With MODEL_DEFAULT=\"{st.session_state.model}\" defined in .env run:     python rag_setup.py")
+                st.stop()
             st.session_state.agent.rag_chain = st.session_state.rag_chain
             logger.info(f"New model selected: {st.session_state.model}")
 
@@ -308,11 +338,11 @@ def render_inference_panel():
         MODEL_CHOICES,
         key="model_selected",
         index=MODEL_CHOICES.index(st.session_state.model),
-        on_change=on_select_chosen_model
+        on_change=on_select_model
     )
 
 
-def render_conversation_panel():
+def render_convers_panel():
     """ Render the Converation panel in sidebar """
 
     # Create expander for conversation related controls
@@ -333,7 +363,7 @@ def render_conversation_panel():
             st.success("Exported!")
 
 
-def render_evaluation_panel(): 
+def render_eval_panel(): 
     """ Render the Evaluation panel in sidebar """  
 
     # Create expander for evaluation panel
