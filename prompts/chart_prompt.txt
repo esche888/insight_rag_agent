@@ -1,27 +1,71 @@
-You are an experienced business data analyst. The following is retrieved data from the company’s sales and satisfaction records:
+You are an experienced business data analyst. The following is retrieved data from the company's sales and satisfaction records:
 
-   {retrieved_data} 
+{retrieved_data}
 
-Please:
-1. Parse the data into a structured JSON array with keys:
-   - month (MM)
-   - year (YYYY)
-   - product (four possible products: Widget A, Widget B, Widget C and Widget D)
+Your task is to transform this data into a chart visualization by providing:
+
+## 1. Parse and Structure the Data
+Extract relevant data into a JSON array with these fields (include only fields present in the data):
+   - month (format: "MM" or "January", "February", etc.)
+   - year (format: "YYYY")
+   - product (Widget A, Widget B, Widget C, or Widget D)
    - region (North, East, South, West)
-   - total_sales
-   - avg_satisfaction
-All chart data items to go into a list with key chart_data.
+   - total_sales (numeric)
+   - avg_satisfaction (numeric, 0-10 scale)
+   - gender (if available)
+   - age (if available)
 
-2. Pick one of three chart types that would help visualize a key relationship
-- **Line Chart**: Use this if the primary goal is to show **trends over time** (e.g., Sales over several continuous months).
-- **Bar Chart**: Use this if the primary goal is to show **comparison of totals across discrete categories** (e.g., Total Sales per Product).
-- **Scatter Plot**: Use this if the primary goal is to show the **correlation or relationship between two quantitative variables** (e.g., Total Sales vs. Avg. Satisfaction).
+## 2. Select the Best Chart Type
+Choose the most appropriate chart type based on the data and question context:
 
-3. Provide a short natural language description of what insights such a chart could show.
+- **line chart**: Show trends over time (e.g., monthly sales progression, satisfaction trends)
+  - Best for: Time series, continuous data, comparing multiple series over time
+  - Use when: Data has temporal ordering (months, quarters, years)
 
-Format your response as valid JSON as OUTPUT with the three fields chart_data (the raw data to be plotted), 
-chart_type (the type of chart to be plotted) and summary (description what is plotted; not longer than 5 words).
+- **bar chart**: Compare values across categories (e.g., sales by product, region comparison)
+  - Best for: Categorical comparisons, discrete groups, ranking
+  - Use when: Comparing totals or averages across distinct categories
 
-&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+- **stacked bar chart**: Show part-to-whole relationships across categories
+  - Best for: Composition breakdown, comparing totals AND parts simultaneously
+  - Use when: Multiple subcategories contribute to category totals
 
-2. Suggest a meaningful chart (e.g., line chart, bar chart, scatter plot) that would help visualize a key relationship.
+- **scatter plot**: Show relationship between two numeric variables
+  - Best for: Correlation analysis, identifying patterns between variables
+  - Use when: Exploring how two metrics relate (e.g., sales vs. satisfaction)
+
+- **area chart**: Show cumulative trends over time with magnitude emphasis
+  - Best for: Volume over time, cumulative totals, trend emphasis
+  - Use when: Time series where total magnitude matters
+
+## 3. Provide Chart Metadata
+Include these fields:
+- **chart_title**: A concise, descriptive title (max 8 words)
+- **x_axis_label**: Label for X-axis (optional, can be empty string)
+- **y_axis_label**: Label for Y-axis (optional, can be empty string)
+- **summary**: Brief description of key insight (max 12 words)
+
+## Output Format
+Return ONLY valid JSON with this exact structure:
+
+{{
+  "chart_data": [
+    {{"month": "January", "product": "Widget A", "total_sales": 15000, "avg_satisfaction": 8.5}},
+    {{"month": "February", "product": "Widget A", "total_sales": 18000, "avg_satisfaction": 8.7}}
+  ],
+  "chart_type": "line chart",
+  "chart_title": "Monthly Sales Trend by Product",
+  "x_axis_label": "Month",
+  "y_axis_label": "Total Sales ($)",
+  "summary": "Widget A shows consistent growth in Q1"
+}}
+
+## Important Guidelines:
+- Include ALL relevant data points from the retrieved data
+- Ensure numeric fields are numbers, not strings
+- Month names should be consistent (all "January" or all "01", not mixed)
+- Chart type must be lowercase: "line chart", "bar chart", "stacked bar chart", "scatter plot", or "area chart"
+- If data is insufficient for a chart, return chart_data as empty array []
+- Provide actionable insights in the summary field
+
+Return ONLY the JSON object, no additional text or markdown formatting.

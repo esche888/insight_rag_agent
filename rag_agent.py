@@ -65,6 +65,9 @@ class State(TypedDict):
     session_data: dict
     chart_data: str
     chart_type: str
+    chart_title: str
+    x_axis_label: str
+    y_axis_label: str
     summary: str
 
 
@@ -99,6 +102,9 @@ class InsightAgent:
                 "end_time": 0.0,
                 "chart_data": "",
                 "chart_type": "",
+                "chart_title": "",
+                "x_axis_label": "",
+                "y_axis_label": "",
                 "summary": ""
             }
             config = {"configurable": {"thread_id": self.thread_id}}
@@ -109,6 +115,9 @@ class InsightAgent:
             returnValue = {
                 "chart_data": result["chart_data"],
                 "chart_type": result["chart_type"],
+                "chart_title": result.get("chart_title", ""),
+                "x_axis_label": result.get("x_axis_label", ""),
+                "y_axis_label": result.get("y_axis_label", ""),
                 "summary": result["summary"],
                 "text": response,
                 "model": model,
@@ -334,21 +343,61 @@ class InsightAgent:
             response_object = chart_chain.invoke({"retrieved_data": summary_data_from_rag})
 
             # Extract the content string (the JSON output)
-            chart_info_str = response_object.content 
+            chart_info_str = response_object.content
             chart_info_json_str = clean_json_string(chart_info_str)
             logger.debug(f"Chart info: \n{chart_info_json_str}")
+
+            # Parse and validate JSON response
             try:
                 parsed_chart_info = json.loads(chart_info_json_str)
             except json.JSONDecodeError as e:
                 logger.error(f"🛑 ERROR: Failed to parse JSON response for chart node: {e}. Raw response: {chart_info_str}")
                 logger.error(f"Full traceback:\n{traceback.format_exc()}")
                 raise ValueError(f"LLM did not return valid JSON for chart information: {e}")
-            summary =  f"[{state['model']}, {state['temperature']}] - {parsed_chart_info.get('summary')}"
+
+            # Validate required fields
+            chart_data = parsed_chart_info.get("chart_data")
+            chart_type = parsed_chart_info.get("chart_type")
+
+            if not chart_data:
+                logger.warning("Chart data is empty or missing")
+                chart_data = []
+
+            if not chart_type:
+                logger.warning("Chart type is missing, defaulting to 'bar chart'")
+                chart_type = "bar chart"
+
+            # Validate chart_data is a list
+            if not isinstance(chart_data, list):
+                logger.error(f"🛑 ERROR: chart_data must be a list, got {type(chart_data)}")
+                chart_data = []
+
+            # Validate chart_type is supported
+            supported_types = ["line chart", "bar chart", "stacked bar chart", "scatter plot", "area chart"]
+            if chart_type.lower() not in supported_types:
+                logger.warning(f"Unsupported chart type '{chart_type}', defaulting to 'bar chart'")
+                chart_type = "bar chart"
+
+            # Validate data items have required fields
+            if chart_data and len(chart_data) > 0:
+                first_item = chart_data[0]
+                logger.debug(f"First chart data item: {first_item}")
+
+                # Check for numeric fields in data
+                has_numeric = any(isinstance(v, (int, float)) for v in first_item.values())
+                if not has_numeric:
+                    logger.warning("No numeric fields found in chart data")
+
+            summary = f"[{state['model']}, {state['temperature']}] - {parsed_chart_info.get('summary', 'Chart generated')}"
             returnValue = {
-                "chart_data": parsed_chart_info.get("chart_data"), 
-                "chart_type": parsed_chart_info.get("chart_type"),
+                "chart_data": chart_data,
+                "chart_type": chart_type.lower(),
+                "chart_title": parsed_chart_info.get("chart_title", ""),
+                "x_axis_label": parsed_chart_info.get("x_axis_label", ""),
+                "y_axis_label": parsed_chart_info.get("y_axis_label", ""),
                 "summary": summary,
             }
+            logger.info(f"Chart generated: type='{chart_type}', data_points={len(chart_data)}, title='{parsed_chart_info.get('chart_title', 'N/A')}'")
             logger.debug(f"returnValue: {returnValue}")
             return returnValue
         
@@ -466,6 +515,9 @@ class InsightAgent:
         metadata = {
             "chart_type": response_dict.get("chart_type"),
             "chart_data": response_dict.get("chart_data"),
+            "chart_title": response_dict.get("chart_title", ""),
+            "x_axis_label": response_dict.get("x_axis_label", ""),
+            "y_axis_label": response_dict.get("y_axis_label", ""),
             "summary": response_dict.get("summary"),
         }
 

@@ -28,7 +28,7 @@ from logging_config import configure_logging
 from utils.line_loader import load_lines
 from utils.prompt_loader import load_prompt
 from rag_setup import create_rag_chain, CHUNK_SIZE, CHUNK_OVERLAP, NUM_RETURNED_DOCS
-from rag_setup import MODEL_GEMMA, MODEL_GEMINI, MODEL_GPT35
+from rag_setup import MODEL_GEMMA, MODEL_GEMINI, MODEL_GPT35, MODEL_CLAUDE
 from rag_agent import create_insight_agent
 from rag_eval import load_test_dataset, EVAL_TEST_DATA_FILE_PATH, eval_single_test, load_eval_prompt
 
@@ -40,57 +40,110 @@ configure_logging(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-# Check whether API key is valid
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-if not GOOGLE_API_KEY:
-    error_msg = f"🛑 ERROR: The GOOGLE_API_KEY environment variable is not set. Please define it in your shell environment or the .env file."
-    logger.critical(error_msg)
-    st.write(error_msg)
-    sys.stop()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    error_msg = f"🛑 ERROR: The OPENAI_API_KEY environment variable is not set. Please define it in your shell environment or the .env file."
-    logger.critical(error_msg)
-    st.write(error_msg)
-    st.stop()
-
-
 # Clear prompt cache to pick up any changes in prompt files right away
 load_prompt.cache_clear()
 
 # Load environment variables from .env
 load_dotenv(verbose=True)
-if not "temperature" in st.session_state:
-    st.session_state.temperature = float(os.getenv("MODEL_TEMPERATURE", 0))
-if not "model" in st.session_state:
-    st.session_state.model = os.getenv("MODEL_DEFAULT", MODEL_GPT35)
-if not "num_returned_docs" in st.session_state:
-    st.session_state.num_returned_docs = os.getenv("NUM_RETURNED_DOCS", NUM_RETURNED_DOCS)
-if not "chunk_size" in st.session_state:
-    st.session_state.chunk_size = os.getenv("CHUNK_SIZE", CHUNK_SIZE)
-if not "chunk_overlap" in st.session_state:
-    st.session_state.chunk_overlap = os.getenv("CHUNK_OVERLAP", CHUNK_OVERLAP)
-if not "eval_model" in st.session_state:
-    st.session_state.eval_model = os.getenv("EVAL_MODEL", MODEL_GPT35)
 
-# Check if gen model provided as first parameter 
-if len(sys.argv) > 1:
-    st.session_state.model = sys.argv[1]
-    if st.session_state.model != MODEL_GEMMA & st.session_state.MODEL != MODEL_GEMINI & st.session_state.MODEL != MODEL_GPT35:
-        logger.error(f"Invalid gen model specified as parameter: {st.session_state.model}")
-        sys.exit(2)
+# Determine available models based on API keys and vectorstore existence
+def get_available_models():
+    """Returns list of models that can be used based on available API keys AND existing vectorstores"""
+    available_models = []
 
-# Get the value from the environment variable   
-model_choices_json_string = os.getenv("MODEL_CHOICES", "[]") 
-try:
-    MODEL_CHOICES = json.loads(model_choices_json_string)
-except json.JSONDecodeError as e:
-    logger.error(f"Error parsing JSON for MODEL_CHOICES: {e}")
-    MODEL_CHOICES = [] 
+    # Import here to avoid circular dependency
+    from rag_setup import FAISS_INDEX_PATH_BASE
+
+    def vectorstore_exists(model_name):
+        """Check if vectorstore exists for a given model"""
+        vectorstore_path = f"{FAISS_INDEX_PATH_BASE}_{model_name}"
+        index_file = os.path.join(vectorstore_path, "index.faiss")
+        return os.path.exists(index_file)
+
+    # Check for OpenAI API key AND vectorstore
+    if os.getenv("OPENAI_API_KEY") and vectorstore_exists(MODEL_GPT35):
+        available_models.append(MODEL_GPT35)
+
+    # Check for Google API key (for Gemini) AND vectorstore
+    if os.getenv("GOOGLE_API_KEY") and vectorstore_exists(MODEL_GEMINI):
+        available_models.append(MODEL_GEMINI)
+
+    # Check for Anthropic API key (for Claude) AND vectorstore
+    if os.getenv("ANTHROPIC_API_KEY") and vectorstore_exists(MODEL_CLAUDE):
+        available_models.append(MODEL_CLAUDE)
+
+    # Ollama doesn't require an API key, but still needs vectorstore
+    if vectorstore_exists(MODEL_GEMMA):
+        available_models.append(MODEL_GEMMA)
+
+    return available_models
+
+# Get available models (will be validated in init)
+MODEL_CHOICES = get_available_models() 
 
 
 def init_session_state():
-    """ Initialize all session state variables """ 
+    """ Initialize all session state variables """
+
+    # Validate that at least one model is available
+    if not MODEL_CHOICES:
+        error_msg = """
+        🛑 **ERROR: No models available**
+
+        Models require BOTH an API key AND a built vectorstore.
+
+        **To fix this:**
+        1. Set at least one API key in your environment or .env file:
+           - `OPENAI_API_KEY` for gpt-3.5-turbo
+           - `ANTHROPIC_API_KEY` for Claude
+           - `GOOGLE_API_KEY` for Gemini
+
+        2. Build the vectorstore for that model:
+           ```bash
+           python rag_setup.py gpt-3.5-turbo
+           # or
+           python rag_setup.py claude-3-5-sonnet-20240620
+           # or
+           python rag_setup.py gemini-2.5-flash
+           ```
+        """
+        logger.critical(error_msg)
+        st.error(error_msg)
+        st.stop()
+
+    # Initialize session state variables
+    if "temperature" not in st.session_state:
+        st.session_state.temperature = float(os.getenv("MODEL_TEMPERATURE", 0))
+
+    if "model" not in st.session_state:
+        # Check if gen model provided as first parameter
+        if len(sys.argv) > 1:
+            requested_model = sys.argv[1]
+            if requested_model in MODEL_CHOICES:
+                st.session_state.model = requested_model
+            else:
+                logger.error(f"Invalid or unavailable model specified as parameter: {requested_model}")
+                logger.error(f"Available models based on API keys: {MODEL_CHOICES}")
+                st.error(f"Invalid model: {requested_model}. Available: {', '.join(MODEL_CHOICES)}")
+                st.stop()
+        else:
+            # Use MODEL_DEFAULT from env if it's available, otherwise use first available model
+            default_model = os.getenv("MODEL_DEFAULT", MODEL_GPT35)
+            st.session_state.model = default_model if default_model in MODEL_CHOICES else MODEL_CHOICES[0]
+
+    if "num_returned_docs" not in st.session_state:
+        st.session_state.num_returned_docs = os.getenv("NUM_RETURNED_DOCS", NUM_RETURNED_DOCS)
+
+    if "chunk_size" not in st.session_state:
+        st.session_state.chunk_size = os.getenv("CHUNK_SIZE", CHUNK_SIZE)
+
+    if "chunk_overlap" not in st.session_state:
+        st.session_state.chunk_overlap = os.getenv("CHUNK_OVERLAP", CHUNK_OVERLAP)
+
+    if "eval_model" not in st.session_state:
+        # Eval model should also be from available models
+        default_eval = os.getenv("EVAL_MODEL", MODEL_GPT35)
+        st.session_state.eval_model = default_eval if default_eval in MODEL_CHOICES else MODEL_CHOICES[0]
 
     # Create RAG chain if it doesn't exist yet
     if "rag_chain" not in st.session_state:
@@ -166,81 +219,173 @@ def write_out_history():
                 # Check for chart data
                 chart_type = msg.additional_kwargs.get("chart_type")
                 chart_data = msg.additional_kwargs.get("chart_data")
+                chart_title = msg.additional_kwargs.get("chart_title", "")
+                x_axis_label = msg.additional_kwargs.get("x_axis_label", "")
+                y_axis_label = msg.additional_kwargs.get("y_axis_label", "")
                 summary = msg.additional_kwargs.get("summary")
-                
+
                 # Check whether it is a chart type of message
                 if chart_data is not None and chart_type:
                     # For a chart type of message, convert data back to DataFrame if necessary
                     df = pd.DataFrame(chart_data)
 
-                    # Define the base chart encoding shared by all multi-series charts
-                    base = alt.Chart(df).encode(
-                        # 'N' for Nominal data (product) - used for color, grouping, and legend
-                        color=alt.Color('product:N', title="Product"),
-                        tooltip=['month', 'product', 'total_sales', 'avg_satisfaction']
-                    )
+                    # Build dynamic tooltip based on available columns
+                    tooltip_fields = []
+                    for field in ['month', 'product', 'region', 'total_sales', 'avg_satisfaction', 'gender', 'age', 'year']:
+                        if field in df.columns:
+                            tooltip_fields.append(field)
+
+                    # Define base chart encoding shared by all charts
+                    # Use product for color if available, otherwise use first categorical column
+                    color_field = 'product:N' if 'product' in df.columns else None
+                    if not color_field and 'region' in df.columns:
+                        color_field = 'region:N'
+
                     logger.debug(f"Chart data: \n {df}")
+                    logger.debug(f"Chart type: {chart_type}")
+                    logger.debug(f"Tooltip fields: {tooltip_fields}")
 
                     # Different handling of different chart types
                     chart_type = chart_type.lower()
                     if not summary:
                         summary = "UNDEFINED"
                     summary = f"[{i}] {summary}"
-                    if chart_type == "line chart":
-                        # Line chart: Shows trend over time for each Product.
-                        chart = base.mark_line(point=True).encode(
-                            # X-axis: Month (Ordinal)
-                            x=alt.X('month:O', title="Month"),
-                            # Y-axis: Total Sales (Quantitative)
-                            y=alt.Y('total_sales:Q', title="Total Sales ($)"),
-                            # Detail/Grouping: 'product' is essential here to get separate lines
-                            detail='product:N'
-                        ).properties(
-                            title=summary
-                        )
 
-                    elif chart_type == "bar chart":
-                        # Bar chart: Plots Total Sales by Month, grouped and colored by Product.
-                        base = alt.Chart(df).encode(
-                            # 'O' for Ordinal data (month)
-                            x=alt.X('month:O', title="Month"),
-                            # 'Q' for Quantitative data (total_sales)
-                            y=alt.Y('total_sales:Q', title="Total Sales"),
-                            # 'N' for Nominal data (product) - used for color and legend
-                            color='product:N', 
-                            # Configure tooltip for interactivity
-                            tooltip=['month', 'product', 'total_sales']
-                        )
-                        # Use mark_bar() and group the bars by product using the column encoding
-                        chart = base.mark_bar().properties(
-                            title=summary
-                        )
+                    # Use chart_title if available, otherwise use summary
+                    title = chart_title if chart_title else summary
 
-                    elif chart_type == "scatter plot":
-                        # --- SCATTER PLOT ---
-                        # Plots Total Sales vs. Average Satisfaction, colored by Product.
-                        base = alt.Chart(df).encode(
-                            # X-axis: Total Sales (Quantitative)
-                            x=alt.X('total_sales:Q', title="Total Sales ($)"),
-                            # Y-axis: Average Satisfaction (Quantitative)
-                            y=alt.Y('avg_satisfaction:Q', title="Avg. Satisfaction"),
-                            # Color: Group by Product for the legend
-                            color=alt.Color('product:N', title="Product"), 
-                            # Configure tooltip for all variables
-                            tooltip=['product', 'total_sales', 'avg_satisfaction', 'month']
-                        )
-                        # Use mark_circle() for a scatter plot
-                        chart = base.mark_circle(size=60).properties(
-                            title=summary
-                        )
+                    try:
+                        if chart_type == "line chart":
+                            # Determine x and y fields
+                            x_field = 'month:O' if 'month' in df.columns else None
+                            y_field = 'total_sales:Q' if 'total_sales' in df.columns else None
 
-                    # Handle the case of an unknown chart type
-                    else:
-                        st.warning(f"Chart type '{chart_type}' is not supported.")
-                        chart = alt.Chart(pd.DataFrame({'a': [0]})).mark_point() # Empty placeholder chart
+                            if x_field and y_field:
+                                x_label = x_axis_label if x_axis_label else "Month"
+                                y_label = y_axis_label if y_axis_label else "Total Sales ($)"
+
+                                chart = alt.Chart(df).mark_line(point=True).encode(
+                                    x=alt.X(x_field, title=x_label),
+                                    y=alt.Y(y_field, title=y_label),
+                                    color=alt.Color(color_field, title=color_field.split(':')[0].title()) if color_field else alt.value('steelblue'),
+                                    detail=color_field.split(':')[0] if color_field else alt.value(None),
+                                    tooltip=tooltip_fields
+                                ).properties(
+                                    title=title,
+                                    width=600,
+                                    height=400
+                                )
+                            else:
+                                st.warning("Insufficient data for line chart")
+                                chart = None
+
+                        elif chart_type == "bar chart":
+                            # Determine x and y fields
+                            x_field = 'month:O' if 'month' in df.columns else ('product:N' if 'product' in df.columns else None)
+                            y_field = 'total_sales:Q' if 'total_sales' in df.columns else None
+
+                            if x_field and y_field:
+                                x_label = x_axis_label if x_axis_label else x_field.split(':')[0].title()
+                                y_label = y_axis_label if y_axis_label else "Total Sales"
+
+                                chart = alt.Chart(df).mark_bar().encode(
+                                    x=alt.X(x_field, title=x_label),
+                                    y=alt.Y(y_field, title=y_label),
+                                    color=alt.Color(color_field, title=color_field.split(':')[0].title()) if color_field else alt.value('steelblue'),
+                                    tooltip=tooltip_fields
+                                ).properties(
+                                    title=title,
+                                    width=600,
+                                    height=400
+                                )
+                            else:
+                                st.warning("Insufficient data for bar chart")
+                                chart = None
+
+                        elif chart_type == "stacked bar chart":
+                            # Stacked bar chart for part-to-whole relationships
+                            x_field = 'month:O' if 'month' in df.columns else ('region:N' if 'region' in df.columns else None)
+                            y_field = 'total_sales:Q' if 'total_sales' in df.columns else None
+
+                            if x_field and y_field and color_field:
+                                x_label = x_axis_label if x_axis_label else x_field.split(':')[0].title()
+                                y_label = y_axis_label if y_axis_label else "Total Sales"
+
+                                chart = alt.Chart(df).mark_bar().encode(
+                                    x=alt.X(x_field, title=x_label),
+                                    y=alt.Y(y_field, title=y_label, stack='zero'),
+                                    color=alt.Color(color_field, title=color_field.split(':')[0].title()),
+                                    tooltip=tooltip_fields
+                                ).properties(
+                                    title=title,
+                                    width=600,
+                                    height=400
+                                )
+                            else:
+                                st.warning("Insufficient data for stacked bar chart (needs grouping variable)")
+                                chart = None
+
+                        elif chart_type == "scatter plot":
+                            # Scatter plot for correlation analysis
+                            x_field = 'total_sales:Q' if 'total_sales' in df.columns else None
+                            y_field = 'avg_satisfaction:Q' if 'avg_satisfaction' in df.columns else None
+
+                            if x_field and y_field:
+                                x_label = x_axis_label if x_axis_label else "Total Sales ($)"
+                                y_label = y_axis_label if y_axis_label else "Avg. Satisfaction"
+
+                                chart = alt.Chart(df).mark_circle(size=100).encode(
+                                    x=alt.X(x_field, title=x_label),
+                                    y=alt.Y(y_field, title=y_label),
+                                    color=alt.Color(color_field, title=color_field.split(':')[0].title()) if color_field else alt.value('steelblue'),
+                                    tooltip=tooltip_fields
+                                ).properties(
+                                    title=title,
+                                    width=600,
+                                    height=400
+                                )
+                            else:
+                                st.warning("Insufficient data for scatter plot")
+                                chart = None
+
+                        elif chart_type == "area chart":
+                            # Area chart for cumulative trends
+                            x_field = 'month:O' if 'month' in df.columns else None
+                            y_field = 'total_sales:Q' if 'total_sales' in df.columns else None
+
+                            if x_field and y_field:
+                                x_label = x_axis_label if x_axis_label else "Month"
+                                y_label = y_axis_label if y_axis_label else "Total Sales ($)"
+
+                                chart = alt.Chart(df).mark_area(opacity=0.7).encode(
+                                    x=alt.X(x_field, title=x_label),
+                                    y=alt.Y(y_field, title=y_label),
+                                    color=alt.Color(color_field, title=color_field.split(':')[0].title()) if color_field else alt.value('steelblue'),
+                                    tooltip=tooltip_fields
+                                ).properties(
+                                    title=title,
+                                    width=600,
+                                    height=400
+                                )
+                            else:
+                                st.warning("Insufficient data for area chart")
+                                chart = None
+
+                        else:
+                            st.warning(f"Chart type '{chart_type}' is not supported. Supported types: line chart, bar chart, stacked bar chart, scatter plot, area chart")
+                            chart = None
+
+                    except Exception as chart_error:
+                        st.error(f"Error creating chart: {str(chart_error)}")
+                        logger.error(f"Chart rendering error: {chart_error}")
+                        chart = None
 
                     # Display the chart in Streamlit
-                    st.altair_chart(chart, use_container_width=True)
+                    if chart is not None:
+                        st.altair_chart(chart, use_container_width=True)
+                        # Show summary text below the chart
+                        if summary:
+                            st.caption(summary)
 
                 else:
                     # It is a text type of message
@@ -403,7 +548,7 @@ def render_eval_panel():
 
 
 def render_rag_panel():
-    """ Render the debug panel in sidebar """
+    """ Render the debug panel in sidebar """ 
 
     # Create the RAG setup expander
     with st.expander("RAG Setup"):

@@ -10,8 +10,10 @@ Key directories and files to reference: `prompts/` (prompt templates), `data/` (
 ## What you need to know to be productive
 
 - Environment & startup:
-  - The project reads many settings from `.env` (see `rag_setup.py`). Important vars: `MODEL_DEFAULT`, `MODEL_TEMPERATURE`, `GEMINI_API_KEY`, `GOOGLE_API_KEY`, `FAISS_INDEX_PATH`, `EVAL_TEST_DATA_FILE_PATH`, and `PDFS` (a JSON string).
-  - Typical workflow: install deps -> `python rag_setup.py` to (re)build the RAG index -> `python rag_eval.py` to run tests -> `streamlit run rag_app.py` to open the UI.
+  - The project reads many settings from `.env` (see `rag_setup.py`). Important vars: `MODEL_DEFAULT`, `MODEL_TEMPERATURE`, `OPENAI_API_KEY` (required for default), `ANTHROPIC_API_KEY` (for Claude), `GOOGLE_API_KEY` (for Gemini), `FAISS_INDEX_PATH`, `EVAL_TEST_DATA_FILE_PATH`, and `PDFS` (a JSON string).
+  - Typical workflow: install deps -> `python rag_setup.py <model>` to (re)build the RAG index -> `python rag_eval.py` to run tests -> `streamlit run rag_app.py` to open the UI.
+  - Default model is gpt-3.5-turbo. Supported models: gpt-3.5-turbo, claude-3-5-sonnet-20240620, gemini-2.5-flash, gemma3:12b.
+  - The UI dynamically shows only models with BOTH configured API keys AND built vectorstores.
 
 - Prompt loading pattern:
   - Prompts are loaded via `utils/prompt_loader.py` using the key name (e.g. `RECOMMENDATION_PROMPT`) or `*_PATH` env var pointing at files in `prompts/`.
@@ -27,7 +29,8 @@ Key directories and files to reference: `prompts/` (prompt templates), `data/` (
   - Sales summaries are created in `create_sales_sumry()` (see `rag_setup.py`) and stored as `Document` objects with metadata fields like `month`, `product`, `total_sales`, `avg_satisfaction`.
 
 - LLM + embeddings mapping:
-  - `create_embeds_genrtr(model)` maps model names to embedding providers (Ollama/GG/OpenAI). Keep mappings synchronized if you add new models.
+  - `create_embeds_genrtr(model)` maps model names to embedding providers (Ollama/Google/OpenAI). Keep mappings synchronized if you add new models.
+  - Claude models use OpenAI embeddings (text-embedding-3-small), so OPENAI_API_KEY is needed for Claude RAG setup.
   - The agent prefixes messages with a model/temperature tag like: `[model, temp] - <query>`; several tests/cleanups strip this prefix (see `rag_eval.py`).
 
 ## Developer workflows & useful commands
@@ -50,7 +53,8 @@ Key directories and files to reference: `prompts/` (prompt templates), `data/` (
 
 ## Integration points to be careful with
 
-- External services: OpenAI, Google GenAI, and Ollama (embeddings/llm). Keys are read from env and failing configs will raise early in `rag_setup.py` when creating embeddings/LLMs.
+- External services: OpenAI (default), Anthropic Claude, Google GenAI, and Ollama (local). Keys are read from env and failing configs will raise early in `rag_setup.py` when creating embeddings/LLMs.
+- Claude models use OpenAI embeddings (text-embedding-3-small) for RAG, so OPENAI_API_KEY is also required when using Claude.
 - FAISS disk paths and manifests: concurrent runs that both write to the same FAISS directory may corrupt the index — prefer single-process operations for indexing.
 
 ## Where to look for examples

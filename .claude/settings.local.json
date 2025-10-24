@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(. venv/bin/activate)",
+      "Bash(python:*)",
+      "Bash(timeout 10 streamlit run:*)",
+      "Bash(for model in \"gpt-3.5-turbo\" \"gemini-2.5-flash\" \"claude-3-5-sonnet-20240620\")",
+      "Bash(do echo \"Checking $model:\")",
+      "Bash(ls:*)",
+      "Bash(done)",
+      "Bash(if [ -f .env ])",
+      "Bash(then echo \"=== .env file exists ===\")",
+      "Bash(else echo \"No .env file found\")",
+      "Bash(fi)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

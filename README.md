@@ -9,8 +9,12 @@ as well as 4 PDFs about various subjects.
 For testing the performance of the agent, a evaluation module runs a set of test cases which cover queries about the sales data
 as well as the data in the PDFs.
 
-The UI allows you to choose between three different LLMs (gemini-2.5-flash, gpt-3.5-turbo, gemma3:12b - to run locally on your laptop using Ollama).
-In the side pannel there is also a dropdown for precanned questions.
+The UI allows you to choose between different LLMs (gpt-3.5-turbo is the default, with optional support for claude-3-5-sonnet, gemini-2.5-flash, and gemma3:12b - to run locally on your laptop using Ollama).
+The model dropdown dynamically shows only models that have BOTH:
+1. A configured API key (or local installation for Ollama)
+2. A built vectorstore (created by running `python rag_setup.py <model>`)
+
+In the side panel there is also a dropdown for precanned questions.
 
 ## Primary modules
 * rag_setup.py: implementation of the RAG layer loading
@@ -20,12 +24,15 @@ In the side pannel there is also a dropdown for precanned questions.
 
 ## Setup instructions
 1. Clone repository
-2. Set up ven environment:  
+2. Set up virtual environment:
     > python -m venv venv
     > . venv/bin/activate
-3. Ensure that API Keys are defined in environment (OPENAI_API_KEY, GOOGLE_API_KEY)
-    > echo $GOOGLE_API_KEY    
-    > echo $OPENAI_API_KEY 
+3. Ensure that at least one API key is defined in environment:
+    > echo $OPENAI_API_KEY    # For gpt-3.5-turbo (default)
+    > echo $ANTHROPIC_API_KEY # For Claude models (optional)
+    > echo $GOOGLE_API_KEY    # For Gemini models (optional)
+
+    Note: The UI will only show models for which you have API keys configured 
 4. Define default model to be used for RAG loading and inference: 
     - Set MODEL_DEFAULT in .env to the corresponding model
     - Like MODEL_DEFAULT="gpt-3.5-turbo"

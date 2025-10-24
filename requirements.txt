@@ -86,6 +86,7 @@ langchain-core>=0.3.72,<1.0.0
 langchain-google-genai==2.0.0
 langchain-ollama==0.3.10
 langchain-openai==0.3.35
+langchain-anthropic==0.3.10
 langchain-text-splitters==0.3.11
 langgraph>=0.2.0,<0.3.0
 

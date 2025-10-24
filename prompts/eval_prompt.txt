@@ -11,6 +11,7 @@ Predicted Answer: The total sales for the East region in May 2024 were $3340.00.
 Explanation: The predicted answer is correct because it explicitly states the capital is Paris, despite including extra information.
 Grade: CORRECT
 # END OF EXAMPLE
+Make sure this concrete EXAMPLE is not used when evaluating the predictions.
 
 Question: {query}
 Reference Answer: {answer}

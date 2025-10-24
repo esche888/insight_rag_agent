@@ -14,11 +14,12 @@ from dotenv import load_dotenv
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_anthropic import ChatAnthropic
 from langchain.evaluation import QAEvalChain
 from logging_config import configure_logging
 from utils.prompt_loader import load_prompt
 from rag_setup import create_rag_chain, MODEL_DEFAULT, MODEL_TEMPERATURE, EVAL_TEST_DATA_FILE_PATH
-from rag_setup import MODEL_GEMMA, MODEL_GEMINI, MODEL_GPT35
+from rag_setup import MODEL_GEMMA, MODEL_GEMINI, MODEL_GPT35, MODEL_CLAUDE
 from rag_agent import create_insight_agent
 
 # Set up logging 
@@ -116,17 +117,31 @@ def evaluate_predictions(test_cases: List[Dict], predictions: List[Dict], eval_m
     logger.info("=" * 60)
     logger.info(f"Evaluating Predictions with QAEvalChain using [{eval_model}] ")
     logger.info("=" * 60)
-    
+
     # Create evaluation chain with custom prompt to assess predictions (result) against ground truth (answer)
     eval_template_text = load_prompt("EVAL_PROMPT")
     eval_template = PromptTemplate(
         input_variables=["question", "answer", "result"],
         template=eval_template_text)
     logger.debug(f"Eval prompt template: \n{eval_template}\n")
+
+    # Create the appropriate LLM based on the model and available API keys
+    eval_llm = None
     if eval_model == MODEL_GPT35:
+        if not os.getenv("OPENAI_API_KEY"):
+            raise ValueError(f"OPENAI_API_KEY not set but required for evaluation model {eval_model}")
         eval_llm = ChatOpenAI(temperature=eval_temp, model=eval_model)
-    if eval_model == MODEL_GEMINI:
+    elif eval_model == MODEL_GEMINI:
+        if not os.getenv("GOOGLE_API_KEY"):
+            raise ValueError(f"GOOGLE_API_KEY not set but required for evaluation model {eval_model}")
         eval_llm = ChatGoogleGenerativeAI(temperature=eval_temp, model=eval_model)
+    elif eval_model == MODEL_CLAUDE:
+        if not os.getenv("ANTHROPIC_API_KEY"):
+            raise ValueError(f"ANTHROPIC_API_KEY not set but required for evaluation model {eval_model}")
+        eval_llm = ChatAnthropic(temperature=eval_temp, model=eval_model)
+    else:
+        raise ValueError(f"Unsupported evaluation model: {eval_model}")
+
     logger.info(f"Create eval chain using [{eval_model}] to evaluate predictions against ground truths")
     eval_chain = QAEvalChain.from_llm(eval_llm, prompt=eval_template)
     
@@ -351,13 +366,7 @@ def get_answer_by_query(json_string: str, target_query: str) -> Optional[str]:
 
 if __name__ == "__main__":
 
-    # Check whether API key is valid
-    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-    if not GOOGLE_API_KEY:
-        sys.exit(
-            "🛑 FATAL: The GOOGLE_API_KEY environment variable is not set. "
-            "Please define it in your shell environment or the .env file."
-        )
+    # Check whether required API key is set
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     if not OPENAI_API_KEY:
         sys.exit(

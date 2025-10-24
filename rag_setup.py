@@ -26,7 +26,8 @@ import json
 from langchain_ollama import OllamaEmbeddings, OllamaLLM
 from langchain_community.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI 
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_anthropic import ChatAnthropic
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
@@ -40,8 +41,9 @@ logger.setLevel(logging.INFO)
 
 # Supported LLMs
 MODEL_GEMMA  = "gemma3:12b"
-MODEL_GEMINI = "gemini-2.5-flash"  
+MODEL_GEMINI = "gemini-2.5-flash"
 MODEL_GPT35  = "gpt-3.5-turbo"
+MODEL_CLAUDE = "claude-3-5-sonnet-20240620"  # Using June 2024 version which is widely available
 
 # Load environment variables from .env
 load_dotenv(verbose=True, override=True)
@@ -69,7 +71,7 @@ RECREATE_VECTORSTORE=True   # If true, then deletes existing vectorstore; otherw
 # Check if gen model provided as first parameter is valid
 if len(sys.argv) > 1:
     model = sys.argv[1]
-    if model != MODEL_GEMMA and model != MODEL_GEMINI and model != MODEL_GPT35:
+    if model not in [MODEL_GEMMA, MODEL_GEMINI, MODEL_GPT35, MODEL_CLAUDE]:
         logger.fatal(f"🛑 FATAL: Invalid model specified as parameter: {model}")
         sys.exit(2)
 else:
@@ -375,13 +377,17 @@ def test_retrieval_only(model: str, test_query: str, k: int = 3):
 def create_embeds_genrtr(model: str):
     """ Creates embeddings generator corresponding to the LLM to be used for creating embeddings """
 
-    embedding_model = None  
+    embedding_model = None
     if model == MODEL_GEMMA:
         embedding_model = OllamaEmbeddings(model=EMBED_MODEL)
     elif model == MODEL_GEMINI:
         embedding_model = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
     elif model == MODEL_GPT35:
-        embedding_model = OpenAIEmbeddings(model="text-embedding-3-small") 
+        embedding_model = OpenAIEmbeddings(model="text-embedding-3-small")
+    elif model == MODEL_CLAUDE:
+        # Claude uses Voyage AI embeddings (recommended by Anthropic)
+        # Fall back to OpenAI embeddings if OPENAI_API_KEY is available
+        embedding_model = OpenAIEmbeddings(model="text-embedding-3-small")
     else:
         logger.error(f"🛑 ERROR: Unknown model {model}")
     return embedding_model
@@ -413,16 +419,18 @@ def load_vectorstore(model: str):
 def create_llm(model: str, temperature):
     """ Create LLM client for loading RAG or retrieval from RAG """
 
-    llm = None  
+    llm = None
     if model == MODEL_GEMMA:
         llm = OllamaLLM(model=model, temperature=temperature, keep_alive='10m')
     elif model == MODEL_GEMINI:
         llm = ChatGoogleGenerativeAI(model=model, temperature=temperature)
     elif model == MODEL_GPT35:
         llm = ChatOpenAI(model=model, temperature=temperature)
+    elif model == MODEL_CLAUDE:
+        llm = ChatAnthropic(model=model, temperature=temperature)
     else:
         logger.error(f"🛑 ERROR: Model undefined or unsupported: {model}")
-        raise ValueError(f"Not able to create LLM client for {model}: {e}")
+        raise ValueError(f"Not able to create LLM client for {model}")
     return llm
 
 # Helper function to format documents
@@ -450,19 +458,13 @@ def create_rag_chain(model, temperature):
 # ---------------- MAIN EXECUTION ----------------
 if __name__ == "__main__":
 
-    # Check whether API key is valid
-    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-    if not GOOGLE_API_KEY:
-        sys.exit(
-            "🛑 FATAL: The GOOGLE_API_KEY environment variable is not set. "
-            "Please define it in your shell environment or the .env file."
-        )
+    # Check whether required API key is set
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     if not OPENAI_API_KEY:
         sys.exit(
             "🛑 FATAL: The OPENAI_API_KEY environment variable is not set. "
             "Please define it in your shell environment or the .env file."
-    )
+        )
         
     # Load and chunk PDFs and data in sales CSV
     logger.info(f"Starting RAG indexing process for [{model}]")
