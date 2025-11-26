@@ -69,8 +69,10 @@ def get_available_models():
         available_models.append(MODEL_GEMINI)
 
     # Check for Anthropic API key (for Claude) AND vectorstore
-    if os.getenv("ANTHROPIC_API_KEY") and vectorstore_exists(MODEL_CLAUDE):
-        available_models.append(MODEL_CLAUDE)
+    # Prefer latest model, but fall back to old if vectorstore exists
+    if os.getenv("ANTHROPIC_API_KEY"):
+        if vectorstore_exists(MODEL_CLAUDE):
+            available_models.append(MODEL_CLAUDE)
 
     # Ollama doesn't require an API key, but still needs vectorstore
     if vectorstore_exists(MODEL_GEMMA):

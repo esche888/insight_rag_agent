@@ -43,7 +43,7 @@ logger.setLevel(logging.INFO)
 MODEL_GEMMA  = "gemma3:12b"
 MODEL_GEMINI = "gemini-2.5-flash"
 MODEL_GPT35  = "gpt-3.5-turbo"
-MODEL_CLAUDE = "claude-3-5-sonnet-20240620"  # Using June 2024 version which is widely available
+MODEL_CLAUDE = "claude-3-haiku-20240307"  
 
 # Load environment variables from .env
 load_dotenv(verbose=True, override=True)
@@ -73,6 +73,7 @@ if len(sys.argv) > 1:
     model = sys.argv[1]
     if model not in [MODEL_GEMMA, MODEL_GEMINI, MODEL_GPT35, MODEL_CLAUDE]:
         logger.fatal(f"🛑 FATAL: Invalid model specified as parameter: {model}")
+        logger.info(f"Valid models: {MODEL_GEMMA}, {MODEL_GEMINI}, {MODEL_GPT35}, {MODEL_CLAUDE}")
         sys.exit(2)
 else:
     model = MODEL_DEFAULT
